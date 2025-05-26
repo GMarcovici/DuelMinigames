@@ -79,7 +79,54 @@ def title_screen():
 #------------------------------------------------------------------------------------------------------------------------Funções
 
 
+#Função para exibir tela de início
+def title_screen():
+    state = "main" #estado inicial
 
+    #imagem de fundo
+    TelaInicio= pygame.image.load('Assets/Background/TelaInicio.png').convert()
+    TelaInicio = pygame.transform.scale(TelaInicio, (WIDTH, HEIGHT))
+    
+    # Música de fundo
+    pygame.mixer.init()
+    pygame.mixer.music.load('Assets/Sounds/background_music.mp3')
+    pygame.mixer.music.set_volume(0.30)  
+    pygame.mixer.music.play(-1)  
+
+    # Loop do menu
+    while True:
+        #aplica tela de fundo
+        screen.fill(BLACK)
+        screen.blit(TelaInicio, (0, 0))
+
+        #muda o estado do menu para exibir instruções
+        if state == "instructions":
+            screen.fill(BLACK)
+            draw_text("Instruções", big_font, WHITE, WIDTH//2, HEIGHT//5, screen)
+            draw_text("Jogador 1: WASD para mover, ESPAÇO para atirar", font, BLUE, WIDTH//2, HEIGHT*2//5, screen)
+            draw_text("Jogador 2: Setas para mover, ENTER para atirar", font, RED, WIDTH//2, HEIGHT*3//5, screen)
+            draw_text("Pressione ENTER para Voltar", font, WHITE, WIDTH//2, HEIGHT*4//5, screen)
+        
+        #atualiza a tela
+        pygame.display.flip()
+        
+        #Recebe os inputs do usuário
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return False
+                if event.key == pygame.K_RETURN:
+                    if state == "main":
+                        return True  
+                    else:
+                        state = "main" 
+                if event.key == pygame.K_i and state == "main":
+                    state = "instructions"
+#------------------------------------------------------------------------------------------------------------------------Funções
 
 
 # Loop principal -----------------------------------------------------------------------------------------------------------------

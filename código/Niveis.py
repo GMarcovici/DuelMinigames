@@ -1,6 +1,7 @@
 #Inicialização --------------------------------------------------------------------------------------------------------------
 import pygame, random, math, classes, Functions, LoopPrincipal #bibliotecas
 # Tela
+
 pygame.init()
 WIDTH, HEIGHT = 1400, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -212,3 +213,100 @@ def level_2(player1, player2):
         return 2
     else:
         return 1 if player1.lives > player2.lives else 2 if player2.lives > player1.lives else 0
+
+def level_3(player1, player2):
+    # Posição dos jogadores e direção inicial
+    player1.rect.x = WIDTH // 4 - player1.rect.width // 2
+    player1.rect.y = HEIGHT // 2 - player1.rect.height // 2
+    player1.direction = "right"
+    player1.image = player1.images["right"]
+    player2.rect.x = 3 * WIDTH // 4 - player2.rect.width // 2
+    player2.rect.y = HEIGHT // 2 - player2.rect.height // 2
+    player2.direction = "left"
+    player2.image = player2.images["left"]
+
+    barrels = pygame.sprite.Group()
+    barrel_spawn_timer = 0.1 * FPS 
+    max_barrels = 100
+
+    #Plano de Fundo
+    FundoLevel3 = pygame.image.load('Assets/Background/fundodeserto.png').convert()
+    FundoLevel3 = pygame.transform.scale(FundoLevel3, (WIDTH * 1.09, HEIGHT * 1.7))
+
+    # Loop do nível 3
+    running = True
+    while running:
+        # Desenha a tela de fundo
+        screen.fill(BLACK)
+        screen.blit(FundoLevel3, (-WIDTH * 0.03, -HEIGHT * 0.4))
+        
+        #Se apertam o botão de fechar, o nivel acaba em empata e passa pro próximo
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 0
+            
+        #Atualiza os jogadores
+        player1.update([])
+        player2.update([])
+
+        # Spawna os barris
+        if barrel_spawn_timer <= 0 and len(barrels) < max_barrels:
+            edge = random.randint(0, 3)
+            if edge == 0:
+                x = random.randint(0, WIDTH - 30)
+                y = 0
+            elif edge == 1: 
+                x = random.randint(0, WIDTH - 30)
+                y = HEIGHT - 30
+            elif edge == 2:
+                x = 0
+                y = random.randint(0, HEIGHT - 30)
+            else:
+                x = WIDTH - 30
+                y = random.randint(0, HEIGHT - 30)
+
+            #Vai em direção ao jogador mais próximo ao spawnar
+            closest_player = min([player1, player2], key=lambda p: math.hypot(
+                x - p.rect.centerx, y - p.rect.centery))
+            dx = closest_player.rect.centerx - x
+            dy = closest_player.rect.centery - y
+            dist = max(1, math.hypot(dx, dy))
+            dx, dy = dx / dist, dy / dist
+
+            barrels.add(Barrel(x, y, dx, dy))
+            barrel_spawn_timer = 0.8 * FPS
+        else:
+            barrel_spawn_timer -= 1
+
+        # Atualiza os barris
+        barrels.update()
+
+        #Checa colisão com jogadores
+        for block in barrels:
+            if block.rect.colliderect(player1.rect):
+                pygame.mixer.Sound('Assets/Sounds/player_hit.wav').play()
+                player1.lives -= 1
+                block.kill()
+            if block.rect.colliderect(player2.rect):
+                pygame.mixer.Sound('Assets/Sounds/player_hit.wav').play()
+                player2.lives -= 1
+                block.kill()
+
+        screen.blit(player1.image, player1.rect)
+        screen.blit(player2.image, player2.rect)
+        
+        player1.draw_lives(screen)
+        player2.draw_lives(screen)
+        
+        barrels.draw(screen)
+
+        draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
+        draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
+        
+        if player1.lives <= 0 or player2.lives <= 0:
+            running = False
+        
+        pygame.display.flip()
+        clock.tick(FPS)
+    
+    return 1 if player2.lives <= 0 else 2 if player1.lives <= 0 else 0

@@ -1,6 +1,6 @@
 #Inicialização --------------------------------------------------------------------------------------------------------------
 import pygame, random, math, classes, Functions, Niveis#bibliotecas
-
+from Functions import *
 # Tela
 pygame.init()
 WIDTH, HEIGHT = 1400, 800

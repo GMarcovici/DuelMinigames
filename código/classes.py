@@ -341,3 +341,35 @@ class Boss(pygame.sprite.Sprite):
         health_width = self.rect.width * (self.health / 20)
         pygame.draw.rect(surface, RED, (self.rect.x, self.rect.y - 10, self.rect.width, 5))
         pygame.draw.rect(surface, GREEN, (self.rect.x, self.rect.y - 10, health_width, 5))
+
+#Classe dos barris
+class Barrel(pygame.sprite.Sprite):
+    def __init__(self, x, y, dx, dy, speed=3):
+        super().__init__()
+        self.image = pygame.image.load('Assets/Objetos/Barrel.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image, (60, 60))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.dx = dx * speed
+        self.dy = dy * speed
+
+    def update(self, players=None):
+        # Se move em linha reta
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+
+        #Quica nas bordas da tela e muda de direção
+        if self.rect.left <= 0:
+            self.dx = abs(self.dx)  
+        if self.rect.right >= WIDTH:
+            self.dx = -abs(self.dx) 
+        if self.rect.top <= 0:
+            self.dy = abs(self.dy) 
+        if self.rect.bottom >= HEIGHT:
+            self.dy = -abs(self.dy)
+
+        #Não deixa sair da tela
+        self.rect.x = max(0, min(WIDTH - self.rect.width, self.rect.x))
+        self.rect.y = max(0, min(HEIGHT - self.rect.height, self.rect.y))
+

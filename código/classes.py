@@ -1,6 +1,5 @@
 #Inicialização --------------------------------------------------------------------------------------------------------------
-import pygame, random, math #bibliotecas
-
+import pygame, random, math, classes, Functions, Niveis#bibliotecas
 # Tela
 pygame.init()
 WIDTH, HEIGHT = 1400, 800
@@ -13,12 +12,13 @@ font = pygame.font.SysFont('Arial', 30)
 big_font = pygame.font.SysFont('Arial', 50)
 clock = pygame.time.Clock()
 FPS = 60
+#--------------------------------------------------------------------------------------------------------------------Inicialização
 
-#Classes --------------------------------------------------------------------------------------------------------------------
+
 #Classe dos jogadores
 class Player(pygame.sprite.Sprite):
     #Recebe a posição em x e y, o dicionário com as imagens de direção, os controles(Varia pra cada player) e tecla de tiro(Varia pra cada Player).
-    def __init__(self, x, y, destinatario, controls, shoot_key):
+    def __init__(self, x, y, destinatario, controls, shoot_key, score):
         super().__init__()
         self.images = {
             "up": pygame.image.load(destinatario["up"]).convert_alpha(),
@@ -42,6 +42,7 @@ class Player(pygame.sprite.Sprite):
         self.cooldown = 0
         self.cooldown_max = 15
         self.bullets = pygame.sprite.Group()
+        self.score = 0
     
     def update(self, obstacles):
         keys = pygame.key.get_pressed()
@@ -236,3 +237,107 @@ class Enemy(pygame.sprite.Sprite):
         for player in players:
             if pygame.sprite.spritecollide(player, self.bullets, True):
                 player.lives -= 1
+
+
+#Classe do Boss
+class Boss(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # Animação do boss
+        self.animation_frames = [
+            pygame.image.load(f'Assets/Characters/bosspygame/sprite_{i}.png').convert_alpha()
+            for i in range(0, 70)#70 frames de animação
+        ]
+        self.animation_frames = [pygame.transform.scale(frame, (100, 100)) for frame in self.animation_frames]
+        self.current_frame = 0
+        self.animation_timer = 0
+        self.animation_speed = 10
+
+        self.image = self.animation_frames[self.current_frame]
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH // 2 - 50
+        self.rect.y = HEIGHT // 2 - 50
+        self.speed = 4
+        self.bullets = pygame.sprite.Group()
+        self.cooldown = 0
+        self.cooldown_max = 30
+        self.health = 20
+        self.move_direction = 1
+        self.start_delay = 2 * FPS
+
+    def update_animation(self):
+        self.animation_timer += 1
+        if self.animation_timer >= self.animation_speed:
+            self.animation_timer = 0
+            for i in range(len(self.animation_frames)):
+                if i == self.current_frame:
+                    self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
+                    break
+            self.image = self.animation_frames[self.current_frame]
+
+    def update(self):
+        self.update_animation() 
+
+        if self.start_delay > 0:
+            self.start_delay -= 1
+            return False
+
+        #Define o movimento do boss, sendo que ele só se move na horizontal   
+        self.rect.x += self.speed * self.move_direction
+        if self.rect.left <= 0:
+            self.move_direction = 1
+        elif self.rect.right >= WIDTH:
+            self.move_direction = -1
+
+    def shoot(self):
+        if self.start_delay > 0:
+            return False
+            
+        if self.cooldown <= 0:
+            bullet_speed = 5
+            num_bullets = 12
+
+            #Som de tiro do boss
+            pygame.mixer.Sound('Assets/Sounds/boss_shoot.wav').play()
+
+            #Tiros em círculo
+            for i in range(num_bullets):
+                angle = (2 * math.pi / num_bullets) * i
+                dx = math.cos(angle) * bullet_speed
+                dy = math.sin(angle) * bullet_speed
+                
+                self.bullets.add(Bullet(
+                    self.rect.centerx,
+                    self.rect.centery,
+                    dx, dy
+                ))
+            
+            self.cooldown = self.cooldown_max
+        else:
+            self.cooldown -= 1
+    
+    def update_bullets(self, players):
+        self.bullets.update()
+        
+        #Elimina as balas que sairam da tela
+        for bullet in self.bullets.copy():
+            if (bullet.rect.right < 0 or bullet.rect.left > WIDTH or
+                bullet.rect.bottom < 0 or bullet.rect.top > HEIGHT):
+                bullet.kill()
+        
+        #Colisão com o jogador
+        for player in players:
+            if pygame.sprite.spritecollide(player, self.bullets, True):
+                player.lives -= 1
+    
+    def take_hit(self):
+        self.health -= 1
+        pygame.mixer.Sound('Assets/Sounds/boss_hit.wav').play()
+        if self.health < 1:
+            pygame.mixer.Sound('Assets/Sounds/enemy_death.wav').play()
+            
+    
+    def draw_health(self, surface):
+        health_width = self.rect.width * (self.health / 20)
+        pygame.draw.rect(surface, RED, (self.rect.x, self.rect.y - 10, self.rect.width, 5))
+        pygame.draw.rect(surface, GREEN, (self.rect.x, self.rect.y - 10, health_width, 5))

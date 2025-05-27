@@ -1,0 +1,214 @@
+#Inicialização --------------------------------------------------------------------------------------------------------------
+import pygame, random, math, classes, Functions, LoopPrincipal #bibliotecas
+# Tela
+pygame.init()
+WIDTH, HEIGHT = 1400, 800
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Duel Minigames")
+
+# Cores e Fontes
+WHITE, BLACK, RED, BLUE, GREEN, YELLOW, ORANGE = ((255, 255, 255), (0, 0, 0), (255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0), (255, 165, 0))
+font = pygame.font.SysFont('Arial', 30)
+big_font = pygame.font.SysFont('Arial', 50)
+clock = pygame.time.Clock()
+FPS = 60
+#--------------------------------------------------------------------------------------------------------------------Inicialização
+
+
+def level_1(player1, player2):
+    #Define as posições dos obstaculos
+    obstacles = [
+        classes.Obstacle(0, 0, 20, HEIGHT),
+        classes.Obstacle(0, 0, WIDTH, 20),
+        classes.Obstacle(WIDTH-20, 0, 20, HEIGHT),
+        classes.Obstacle(0, HEIGHT-20, WIDTH, 20),
+        classes.Obstacle(0, HEIGHT*0.6, WIDTH*0.35, 50),
+        classes.Obstacle(110, HEIGHT*0.79, WIDTH*0.32, 60),
+        classes.Obstacle(WIDTH*0.55, HEIGHT*0.45, 50, HEIGHT*0.40),
+        classes.Obstacle(WIDTH*0.18, HEIGHT*0.20, WIDTH*0.39, 60),
+        classes.Obstacle(WIDTH*0.34, 220, 50, HEIGHT*0.20),
+        classes.Obstacle(WIDTH*0.69, 100, WIDTH*0.20, HEIGHT*0.35),
+        classes.Obstacle(WIDTH*0.15, HEIGHT*0.40, 100, 90)]
+    
+    # Acha locais validos para spawnar inimigos
+    valid_positions = []
+    for x, y in [(100,100),(900,100),(200,300),(700,200),
+                (300,400),(600,100),(100,600),(800,600),
+                (400,700),(700,500)]:
+        temp_rect = pygame.Rect(x, y, 25, 25)
+        if not any(temp_rect.colliderect(o.rect) for o in obstacles):
+            valid_positions.append((x, y))
+    
+    enemies = pygame.sprite.Group()
+    enemies_to_spawn = [classes.Enemy(*random.choice(valid_positions)) for _ in range(5)]
+    enemy_spawn_timer = 3 * FPS
+    
+    # Posiciona os jogadores em locais aleatórios que não colidam com obstáculos
+    for player in [player1, player2]:
+        while True:
+            player.rect.x = random.randint(0, WIDTH - player.rect.width)
+            player.rect.y = random.randint(0, HEIGHT - player.rect.height)
+            if not any(player.rect.colliderect(o.rect) for o in obstacles):
+                break
+    
+    #Define o plano de fundo do nível
+    FundoLevel1= pygame.image.load('Assets/Background/Fundo1.png').convert()
+    FundoLevel1 = pygame.transform.scale(FundoLevel1, (WIDTH*1.09, HEIGHT*1.8))
+
+    #Loop do nível
+    running = True
+    while running:
+        #Desenha tela de fundo
+        screen.fill(BLACK)
+        screen.blit(FundoLevel1, (-WIDTH*0.03, -HEIGHT*0.5))
+
+        #Recebe os inputs do jogador
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 0
+            if event.type == pygame.KEYDOWN:
+                if event.key == player1.shoot_key:
+                    player1.shoot()
+                if event.key == player2.shoot_key:
+                    player2.shoot()
+        
+        player1.update(obstacles)
+        player2.update(obstacles)
+        
+        player1.update_bullets(obstacles, enemies, player2)
+        player2.update_bullets(obstacles, enemies, player1)
+        
+        if enemy_spawn_timer > 0:
+            enemy_spawn_timer -= 1
+        elif enemies_to_spawn:
+            enemies.add(enemies_to_spawn.pop())
+            enemy_spawn_timer = 1 * FPS
+        
+        for enemy in enemies:
+            enemy.update([player1, player2])
+            enemy.shoot()
+            enemy.update_bullets([player1, player2], obstacles)
+        
+        for obstacle in obstacles:
+            screen.blit(obstacle.image, obstacle.rect)
+        
+        enemies.draw(screen)
+        screen.blit(player1.image, player1.rect)
+        screen.blit(player2.image, player2.rect)
+        
+        player1.draw_lives(screen)
+        player2.draw_lives(screen)
+        
+        player1.bullets.draw(screen)
+        player2.bullets.draw(screen)
+        for enemy in enemies:
+            enemy.bullets.draw(screen)
+        
+        #Desenha a pontuação dos jogadores
+        Functions.draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
+        
+        #Acaba o nível se um dos jogadores perder todas as vidas
+        if player1.lives <= 0 or player2.lives <= 0:
+            running = False
+        
+        pygame.display.flip()
+        clock.tick(FPS)
+    
+    # Retorna o resultado do nível
+    return 1 if player1.lives > 0 and player2.lives <= 0 else 2 if player2.lives > 0 and player1.lives <= 0 else 0
+
+def level_2(player1, player2):
+    #Define a posição e direção inicial dos jogadores
+    player1.rect.x = WIDTH // 2 - player1.rect.width // 2
+    player1.rect.y = HEIGHT - 50
+    player1.direction = "up"
+    player1.image = player1.images["up"]
+    player2.rect.x = WIDTH // 2 - player2.rect.width // 2
+    player2.rect.y = 20
+    player2.direction = "down"
+    player2.image = player2.images["down"]
+    
+    #Define o objeto boss da classe Boss
+    boss = classes.Boss()
+    
+    #Plano de Fundo
+    FundoLevel2= pygame.image.load('Assets/Background/Fundo1.png').convert()
+    FundoLevel2 = pygame.transform.scale(FundoLevel2, (WIDTH*1.09, HEIGHT*1.8))
+
+    #Loop do nível
+    running = True
+    while running:
+        #Desenha a tela de fundo
+        screen.fill(BLACK)
+        screen.blit(FundoLevel2, (-WIDTH*0.03, -HEIGHT*0.5))
+        
+        #Input dos jogadores
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 0
+            if event.type == pygame.KEYDOWN:
+                if event.key == player1.shoot_key:
+                    player1.shoot()
+                if event.key == player2.shoot_key:
+                    player2.shoot()
+        
+        keys = pygame.key.get_pressed()
+        
+        #Define que os jogadores só andam pra direita e esquerda
+        if keys[player1.controls[2]]: 
+            player1.rect.x = max(0, player1.rect.x - player1.speed)
+        if keys[player1.controls[3]]:  
+            player1.rect.x = min(WIDTH - player1.rect.width, player1.rect.x + player1.speed)
+        if keys[player2.controls[2]]:  
+            player2.rect.x = max(0, player2.rect.x - player2.speed)
+        if keys[player2.controls[3]]: 
+            player2.rect.x = min(WIDTH - player2.rect.width, player2.rect.x + player2.speed)
+        
+        player1.update_bullets([], None, player2)
+        player2.update_bullets([], None, player1)
+        
+        for bullet in player1.bullets:
+            if bullet.rect.colliderect(boss.rect):
+                boss.take_hit()
+                bullet.kill()
+        
+        for bullet in player2.bullets:
+            if bullet.rect.colliderect(boss.rect):
+                boss.take_hit()
+                bullet.kill()
+        
+        boss.update()
+        boss.shoot()
+        boss.update_bullets([player1, player2])
+        
+        screen.blit(player1.image, player1.rect)
+        screen.blit(player2.image, player2.rect)
+        screen.blit(boss.image, boss.rect)
+        
+        player1.draw_lives(screen)
+        player2.draw_lives(screen)
+        boss.draw_health(screen)
+
+        player1.bullets.draw(screen)
+        player2.bullets.draw(screen)
+        boss.bullets.draw(screen)
+        
+        #Desenha a pontuação geral
+        Functions.draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
+        
+        #Acaba o nível se um dos jogadores perder todas as vidas ou se o boss for derrotado
+        if player1.lives <= 0 or player2.lives <= 0 or boss.health <= 0:
+            running = False
+        
+        pygame.display.flip()
+        clock.tick(FPS)
+    
+    # Retorna o resultado do nível
+    if player1.lives > 0 and player2.lives <= 0:
+        return 1
+    elif player2.lives > 0 and player1.lives <= 0:
+        return 2
+    else:
+        return 1 if player1.lives > player2.lives else 2 if player2.lives > player1.lives else 0

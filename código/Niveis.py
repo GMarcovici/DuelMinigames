@@ -327,7 +327,6 @@ def level_4(player1, player2):
     square_change_time = random.randint(2, 4) * FPS
     square_timer = 0
     can_shoot = False#Não pode atirar até o farol ficar verde
-    winner = 0
     shot_fired = False#Não pode atirar até o farol ficar verde
     
     #Define a imagem do farol verde e vermelho
@@ -383,12 +382,10 @@ def level_4(player1, player2):
         if shot_fired:
             for bullet in player1.bullets:
                 if bullet.rect.colliderect(player2.rect):
-                    winner=1
                     running = False
             
             for bullet in player2.bullets:
                 if bullet.rect.colliderect(player1.rect):
-                    winner = 2
                     running = False
         
         if player1.lives <= 0 or player2.lives <= 0:

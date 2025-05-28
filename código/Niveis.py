@@ -1,7 +1,6 @@
 #Inicialização --------------------------------------------------------------------------------------------------------------
 import pygame, random, math, classes, Functions, LoopPrincipal #bibliotecas
 # Tela
-from Functions import draw_text
 pygame.init()
 WIDTH, HEIGHT = 1400, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -273,7 +272,7 @@ def level_3(player1, player2):
             dist = max(1, math.hypot(dx, dy))
             dx, dy = dx / dist, dy / dist
 
-            barrels.add(Barrel(x, y, dx, dy))
+            barrels.add(classes.Barrel(x, y, dx, dy))
             barrel_spawn_timer = 0.8 * FPS
         else:
             barrel_spawn_timer -= 1
@@ -300,8 +299,8 @@ def level_3(player1, player2):
         
         barrels.draw(screen)
 
-        draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
-        draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
         
         if player1.lives <= 0 or player2.lives <= 0:
             running = False
@@ -384,7 +383,7 @@ def level_4(player1, player2):
         if shot_fired:
             for bullet in player1.bullets:
                 if bullet.rect.colliderect(player2.rect):
-                    winner = 1
+                    winner=1
                     running = False
             
             for bullet in player2.bullets:
@@ -412,13 +411,140 @@ def level_4(player1, player2):
             screen.blit(red_square, square)
         
         if can_shoot and not shot_fired:
-            draw_text("ATIRE AGORA!", font, WHITE, WIDTH//2, HEIGHT//2 + 70, screen)
+            Functions.draw_text("ATIRE AGORA!", font, WHITE, WIDTH//2, HEIGHT//2 + 70, screen)
         
-        draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
-        draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
         
         pygame.display.flip()
         clock.tick(FPS)
     
     #retorna o vencedor
     return 1 if player2.lives <= 0 else 2 if player1.lives <= 0 else 0
+
+def level_5(player1, player2):
+
+    # Define a posição inicial dos jogadores
+    player1.rect.x = 50
+    player1.rect.y = HEIGHT // 2 - player1.rect.height // 2
+    player1.direction = "right"
+    player1.speed = 5  # Ajuste a velocidade, se necessário
+    player2.rect.x = WIDTH - 50 - player2.rect.width
+    player2.rect.y = HEIGHT // 2 - player2.rect.height // 2
+    player2.direction = "left"
+    player2.speed = 5  # Ajuste a velocidade, se necessário
+    
+    #Cria objeto ball da classe Ball
+    ball = classes.Ball()
+
+    #Quantidade de gols de cada jogador
+    goals_p1 = 0
+    goals_p2 = 0
+
+    #Tamanho do gol
+    goal_width = 30
+    goal_height = 150
+    goal1 = pygame.Rect(0, HEIGHT // 2 - goal_height // 2, goal_width, goal_height)
+    goal2 = pygame.Rect(WIDTH - goal_width, HEIGHT // 2 - goal_height // 2, goal_width, goal_height)
+
+    #Plano de Fundo
+    CampoFut = pygame.image.load('Assets/Background/CampoFut.png').convert()
+    CampoFut = pygame.transform.scale(CampoFut, (WIDTH * 1.09, HEIGHT * 1.7))
+
+    #Loop do nível 5
+    running = True
+    while running:
+        #Desenha a tela de fundo
+        screen.fill(BLACK)
+        screen.blit(CampoFut, (-WIDTH * 0.03, -HEIGHT * 0.5))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 0
+
+        # Atualizar os jogadores
+        player1.update([])
+        player2.update([])
+
+        # Atualizar a bola
+        ball.update()
+
+        # Colisões do Jogador 1 com a bola
+        if ((ball.rect.x - player1.rect.x)** 2 + (ball.rect.y - player1.rect.y)**2)** 0.5 < 45:
+            ball.dx = -abs(ball.dx)
+
+            pygame.mixer.Sound('Assets/Sounds/ball_hit.wav').play()#som
+
+            if player1.rect.y < ball.rect.y and player1.rect.x < ball.rect.x:
+                ball.dy = 4
+                ball.dx = 4
+            elif player1.rect.y < ball.rect.y and player1.rect.x > ball.rect.x:
+                ball.dy = 4
+                ball.dx = -4
+            elif player1.rect.y > ball.rect.y and player1.rect.x < ball.rect.x:
+                ball.dy = -4
+                ball.dx = 4
+            elif player1.rect.y > ball.rect.y and player1.rect.x > ball.rect.x:
+                ball.dy = -4
+                ball.dx = -4
+            else:
+                ball.dy = 0
+                ball.dx = 4
+
+        # Colisões do Jogador 2 com a bola
+        if ((ball.rect.x - player2.rect.x)**2 + (ball.rect.y - player2.rect.y)**2)**0.5 < 45:
+            ball.dx = abs(ball.dx)
+
+            pygame.mixer.Sound('Assets/Sounds/ball_hit.wav').play()#som
+
+            if player2.rect.y < ball.rect.y and player2.rect.x < ball.rect.x:
+                ball.dy = 4
+                ball.dx = 4
+            elif player2.rect.y < ball.rect.y and player2.rect.x > ball.rect.x:
+                ball.dy = 4
+                ball.dx = -4
+            elif player2.rect.y > ball.rect.y and player2.rect.x < ball.rect.x:
+                ball.dy = -4
+                ball.dx = 4
+            elif player2.rect.y > ball.rect.y and player2.rect.x > ball.rect.x:
+                ball.dy = -4
+                ball.dx = -4
+            else:
+                ball.dy = 0
+                ball.dx = 4
+
+        # Gol para o jogador 2
+        if ball.rect.colliderect(goal1):
+            pygame.mixer.Sound('Assets/Sounds/victory.wav').play()#som
+            goals_p2 += 1
+            ball = classes.Ball()
+            if goals_p2 >= 2:
+                return 2#Vitória do jogador 2 caso marque 2 gols
+
+        # Gol para o jogador 1
+        if ball.rect.colliderect(goal2):
+            pygame.mixer.Sound('Assets/Sounds/victory.wav').play()#som
+            goals_p1 += 1
+            ball = classes.Ball()
+            if goals_p1 >= 2:
+                return 1#Vitória do jogador 1 caso maque 2 gols
+
+        # Desenhar os elementos na tela
+        screen.blit(player1.image, player1.rect)
+        screen.blit(player2.image, player2.rect)
+        screen.blit(ball.image, ball.rect)
+
+        pygame.draw.rect(screen, WHITE, goal1, 2)
+        pygame.draw.rect(screen, WHITE, goal2, 2)
+
+        #Placar do nível 5
+        Functions.draw_text(f"{goals_p1} x {goals_p2}", font, BLACK, WIDTH // 2, 40, screen)
+
+        #Placar Geral
+        Functions.draw_text(f"J1 : {player1.score}", font, BLUE, WIDTH*0.25, HEIGHT*0.02, screen)
+        Functions.draw_text(f"J2 - {player2.score}", font, RED, WIDTH*0.75, HEIGHT*0.02, screen)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+    return 0

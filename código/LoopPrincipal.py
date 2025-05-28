@@ -36,7 +36,7 @@ def main():
     player2 = classes.Player(WIDTH - 130, HEIGHT // 2, player2_images, [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT], pygame.K_RETURN, 0)
     
     #Define os níveis do jogo, reinicando as condições dos players e calculando a pontuação a cada level
-    levels = [Niveis.level_1, Niveis.level_2, Niveis.level_3, Niveis.level_4]
+    levels = [Niveis.level_1, Niveis.level_2, Niveis.level_3, Niveis.level_4, Niveis.level_5]
     for level in levels:
         player1.lives = 3
         player2.lives = 3

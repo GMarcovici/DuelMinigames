@@ -1,5 +1,5 @@
 #Inicialização --------------------------------------------------------------------------------------------------------------
-import pygame, random, math, classes, Functions, Niveis#bibliotecas
+import pygame, random, math, Functions, Niveis#bibliotecas
 # Tela
 pygame.init()
 WIDTH, HEIGHT = 1400, 800
@@ -373,3 +373,28 @@ class Barrel(pygame.sprite.Sprite):
         self.rect.x = max(0, min(WIDTH - self.rect.width, self.rect.x))
         self.rect.y = max(0, min(HEIGHT - self.rect.height, self.rect.y))
 
+class Ball(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # Carrega a imagem da bola de futebol
+        self.image = pygame.image.load('Assets/Objetos/bolafutebolpygame-1.png.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image, (30, 30))  # Ajusta o tamanho para 30x30
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH//2 - 15
+        self.rect.y = HEIGHT//2 - 15
+        self.dx = random.choice([-4, -3, 3, 4])
+        self.dy = random.choice([-4, -3, 3, 4])
+    
+    def update(self):
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+        
+        #Quica nas bordas da tela
+        if self.rect.top <= 0 or self.rect.bottom >= HEIGHT:
+            self.dy *= -1
+        if self.rect.left <= 0 or self.rect.right >= WIDTH:
+            self.dx *= -1
+        
+        #Mantém a bola na tela
+        self.rect.x = max(0, min(WIDTH - self.rect.width, self.rect.x))
+        self.rect.y = max(0, min(HEIGHT - self.rect.height, self.rect.y))

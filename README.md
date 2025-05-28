@@ -48,6 +48,13 @@ Ao final da aventura, o jogo exibe o **vencedor geral com base no placar acumula
 
 ---
 
+**Créditos:** 
+-Lógica e organização do loop principal sugerida pelo DeepSeek. 
+-Arte pixelada feita através do site Piskelapp.com/p/create/sprite.
+-Sugestões de melhorias e apontamento de bugs pelo autopilot.
+
+---
+
 **Feito por Gabriel Marcovici, Yochai Svartz e Gabriel Lemos.**
 
 

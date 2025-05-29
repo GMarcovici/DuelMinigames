@@ -55,6 +55,13 @@ Ao final da aventura, o jogo exibe o **vencedor geral com base no placar acumula
 
 ---
 
+**Link do vídeo:**
+
+https://youtube.com/shorts/HEZtbSmPXnY?si=EAlmRpQj62XbBJbt
+
+
+---
+
 **Feito por Gabriel Marcovici, Yochai Svartz e Gabriel Lemos.**
 
 
